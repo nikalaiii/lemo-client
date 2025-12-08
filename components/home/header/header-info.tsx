@@ -25,6 +25,8 @@ const HeaderInfo = () => {
         justifyContent: "center",
         alignItems: "center",
         gap: 1,
+        backgroundColor: "#000",
+        minHeight: "150vh",
       }}
     >
       <FadeContainer>

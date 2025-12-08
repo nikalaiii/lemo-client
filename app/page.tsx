@@ -7,6 +7,7 @@ export default function Home() {
     <>
       <HeaderHome />
       <Journal />
+      <div className="" style={{ minHeight: "100vh " }}></div>
     </>
   );
 }

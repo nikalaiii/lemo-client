@@ -1,10 +1,9 @@
 "use client";
 
-import { AppBar, Box, Container, Toolbar } from "@mui/material";
+import { AppBar, Box, Container, Toolbar, Typography } from "@mui/material";
 import NavBar from "./nav-bar";
 import Terminal from "./terminal";
 import HeaderInfo from "./header-info";
-import LemoCircle from "./lemo-circle";
 
 const HeaderHome = () => {
   return (
@@ -60,11 +59,16 @@ const HeaderHome = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between", // центруємо блок по вертикалі в хедері
+
           }}
         >
-          <LemoCircle />
+          <Typography
+            variant="h1"
+            sx={{ fontWeight: "800", fontSize: "50px", whiteSpace: "nowrap" }}
+          >
+            Check | Trade | Check
+          </Typography>
           <HeaderInfo />
-
         </Container>
       </Box>
     </>

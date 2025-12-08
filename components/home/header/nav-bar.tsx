@@ -1,11 +1,34 @@
 import { Toolbar, Box, Container } from "@mui/material";
 import NavLink from "./nav-link";
-import Image from "next/image";
 import NavAuthLink from "./auth-link";
+import LemoCircle from "./lemo-circle";
+import { useState } from "react";
+import GlitchOverlay from "@/components/shared/effects/glitch";
+import { useRouter } from "next/navigation";
+import LemoWordmark from "./nav-logo";
 
 const NavBar = () => {
+  const [trigger, setTrigger] = useState(false);
+  const [clicked, setClicked] = useState(false);
+  const router = useRouter()
+
+  const startGlitch = () => {
+    setTrigger(false); // reset
+    requestAnimationFrame(() => setTrigger(true));
+  };
+
+  const handleClick = () => {
+      if (!clicked) {
+        startGlitch();
+        return setClicked(true);
+      } else { 
+        router.refresh();
+      }
+  }
+
   return (
     <Toolbar sx={{ minHeight: "72px" }}>
+      <GlitchOverlay active={trigger} />
       <Container
         sx={{
           display: "flex",
@@ -14,48 +37,17 @@ const NavBar = () => {
         }}
       >
         {/* Логотип */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 5 }}>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Image
-              width={45}
-              height={45}
-              style={{ width: "45px", height: "45px" }}
-              src={"/logo.jpg"}
-              alt="lemo"
-            />
-            <svg
-              width="200"
-              height="64"
-              viewBox="0 0 200 64"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect width="200" height="64" fill="black" />
-
-              <g
-                fill="white"
-                fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                fontWeight="600"
-                fontSize="32"
-              >
-                <text x="40" y="44">
-                  L
-                </text>
-
-                <g transform="translate(100,0) scale(-1,1)">
-                  <text x="0" y="44">
-                    E
-                  </text>
-                </g>
-
-                <text x="120" y="44">
-                  M
-                </text>
-
-                <text x="160" y="44">
-                  O
-                </text>
-              </g>
-            </svg>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 5,
+          }}
+        >
+          <Box onClick={() => handleClick()} sx={{ display: "flex", alignItems: "center" }}>
+            <LemoCircle isClicked={clicked} />
+           <LemoWordmark />
           </Box>
           {/* Навігація */}
           <Box sx={{ display: "flex", gap: 4 }}>
@@ -66,8 +58,8 @@ const NavBar = () => {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-            <NavAuthLink type="login" />
-            <NavAuthLink type="register" />
+          <NavAuthLink type="login" />
+          <NavAuthLink type="register" />
         </Box>
       </Container>
     </Toolbar>
