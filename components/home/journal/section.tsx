@@ -69,7 +69,9 @@ useEffect(() => {
         justifyContent: "center",
         alignItems: "center",
         maxWidth: "1200px",
-        margin: 'auto'
+        maxHeight: "90vh",
+        margin: 'auto',
+        backgroundColor: "#000",
       }}
     >
       <AnimatePresence mode="wait" custom={direction}>
