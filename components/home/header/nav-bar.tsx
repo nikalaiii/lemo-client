@@ -1,6 +1,5 @@
-import { Toolbar, Box, Container } from "@mui/material";
+import { Toolbar, Box, Container, Button } from "@mui/material";
 import NavLink from "./nav-link";
-import NavAuthLink from "./auth-link";
 import LemoCircle from "./lemo-circle";
 import { useState } from "react";
 import GlitchOverlay from "@/components/shared/effects/glitch";
@@ -58,8 +57,8 @@ const NavBar = () => {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-          <NavAuthLink type="login" />
-          <NavAuthLink type="register" />
+          <Button onClick={() => router.push('register')} variant="contained">Register</Button>
+          <Button onClick={() => router.push('login')} variant="outlined">Login</Button>
         </Box>
       </Container>
     </Toolbar>

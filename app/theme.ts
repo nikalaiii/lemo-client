@@ -63,5 +63,90 @@ export const theme = createTheme({
         },
       },
     },
+     MuiButton: {
+  defaultProps: {
+    disableRipple: true,
+    variant: "contained",
+    color: "primary",
+  },
+  styleOverrides: {
+    root: {
+      position: "relative",
+      overflow: "visible", // даємо тіням вийти за межі
+      borderRadius: 0,
+      textTransform: "none",
+      fontWeight: 500,
+      fontSize: "16px",
+      paddingInline: "2rem",
+      paddingBlock: "0.55rem",
+      opacity: 0.85,
+      "&:hover": {
+        opacity: 1,
+      },
+
+      // базові параметри обох “тіней”
+      "&::before, &::after": {
+        content: '""',
+        position: "absolute",
+        left: 0,       // трохи ширші за кнопку
+        right: 0,
+        height: "10px",
+        opacity: 0,
+        transform: "skewX(-18deg) translateY(0)",
+        transformOrigin: "center",
+        transition: "opacity .22s ease-out, transform .22s ease-out",
+        pointerEvents: "none",
+      },
+
+      // верхня зелена
+      "&::before": {
+        top: 0,
+        backgroundColor: "rgba(46, 204, 113, 0.75)", // зелена, напівпрозора
+      },
+
+      // нижня червона
+      "&::after": {
+        bottom: 0,
+        backgroundColor: "rgba(192, 57, 43, 0.8)", // червона, напівпрозора
+      },
+
+      // при hover “тіні” виїжджають за межі кнопки
+      "&:hover::before": {
+        opacity: 1,
+        transform: "skewX(-18deg) translateY(-120%)", // вверх, як верхня тінь
+      },
+      "&:hover::after": {
+        opacity: 1,
+        transform: "skewX(-18deg) translateY(120%)",  // вниз, як нижня тінь
+      },
+    },
+  },
+  variants: [
+    {
+      props: { variant: "contained", color: "primary" },
+      style: {
+        backgroundColor: "#ffffff",
+        color: "#000000",
+        border: "1px solid transparent",
+        "&:hover": {
+          backgroundColor: "#f5f5f5",
+          borderColor: "transparent",
+        },
+      },
+    },
+    {
+      props: { variant: "outlined", color: "primary" },
+      style: {
+        backgroundColor: "transparent",
+        color: "#ffffff",
+        border: "1px solid #ffffff",
+        "&:hover": {
+          backgroundColor: "rgba(255,255,255,0.08)",
+          borderColor: "#ffffff",
+        },
+      },
+    },
+  ],
+},
   },
 });
