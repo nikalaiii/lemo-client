@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import RealtimeBackground from "@/components/shared/market";
+import { AppBar } from "@mui/material";
+import NavBar from "@/components/shared/navigation/nav-bar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,8 +31,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+       
         <RealtimeBackground />
-        <Providers>{children}</Providers>
+        <Providers>
+           <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          background: "rgba(0,0,0,0.35)",
+          backdropFilter: "blur(3px)",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        <NavBar />
+      </AppBar>
+          {children}</Providers>
       </body>
     </html>
   );

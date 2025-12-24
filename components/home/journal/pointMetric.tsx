@@ -4,7 +4,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import React from "react";
-import { motion } from "framer-motion";
+import { easeOut, motion } from "framer-motion";
 
 interface Point {
   title: string;
@@ -22,9 +22,9 @@ const itemVariants = {
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.1, // кожен наступний пізніше
+      delay: i * 0.1, 
       duration: 0.4,
-      ease: "easeOut",
+      ease: easeOut,
     },
   }),
 };

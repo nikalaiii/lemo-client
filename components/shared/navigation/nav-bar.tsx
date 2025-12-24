@@ -1,10 +1,14 @@
+'use client'
+
 import { Toolbar, Box, Container, Button } from "@mui/material";
 import NavLink from "./nav-link";
-import LemoCircle from "./lemo-circle";
 import { useState } from "react";
 import GlitchOverlay from "@/components/shared/effects/glitch";
 import { useRouter } from "next/navigation";
 import LemoWordmark from "./nav-logo";
+import Link from "next/link";
+import NavButton from "./nav-button";
+import LemoCircle from "@/components/home/header/lemo-circle";
 
 const NavBar = () => {
   const [trigger, setTrigger] = useState(false);
@@ -57,8 +61,8 @@ const NavBar = () => {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-          <Button onClick={() => router.push('register')} variant="contained">Register</Button>
-          <Button onClick={() => router.push('login')} variant="outlined">Login</Button>
+          <NavButton variant="contained" text="Register" href='/register'/>
+          <NavButton variant="outlined" text="Login" href='/login'/>
         </Box>
       </Container>
     </Toolbar>

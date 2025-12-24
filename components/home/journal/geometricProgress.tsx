@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { motion } from "framer-motion";
+import { easeInOut, motion } from "framer-motion";
 import { Box } from "@mui/material";
 import { FloatingNumbersLayer } from "./float-layer";
 
@@ -65,7 +65,7 @@ export const GeometricProgressionChart: React.FC<GeometricChartProps> = ({
       pathLength: 1,
       opacity: 1,
       transition: {
-        pathLength: { duration: 2, ease: "easeInOut" },
+        pathLength: { duration: 2, ease: easeInOut },
         opacity: { duration: 0.4 },
       },
     },

@@ -1,7 +1,6 @@
 "use client";
 
-import { AppBar, Box, Container, Toolbar, Typography } from "@mui/material";
-import NavBar from "./nav-bar";
+import { Box, Container, Toolbar, Typography } from "@mui/material";
 import Terminal from "./terminal";
 import HeaderInfo from "./header-info";
 
@@ -9,17 +8,7 @@ const HeaderHome = () => {
   return (
     <>
       {/* Фіксований навбар зверху */}
-      <AppBar
-        position="fixed"
-        elevation={0}
-        sx={{
-          background: "rgba(0,0,0,0.35)",
-          backdropFilter: "blur(3px)",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <NavBar />
-      </AppBar>
+      
 
       {/* Спейсер під AppBar, щоб контент не залазив під нього */}
       <Toolbar />

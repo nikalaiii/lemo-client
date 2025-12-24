@@ -10,7 +10,7 @@ export interface CandleProps {
   open: number;
   close: number;
   direction: CandleDirection;
-  type: "b/w" | "g/r";
+  type?: "b/w" | "g/r";
 }
 
 export const Candle: React.FC<CandleProps> = ({
