@@ -31,21 +31,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-       
         <RealtimeBackground />
         <Providers>
-           <AppBar
-        position="fixed"
-        elevation={0}
-        sx={{
-          background: "rgba(0,0,0,0.35)",
-          backdropFilter: "blur(3px)",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <NavBar />
-      </AppBar>
-          {children}</Providers>
+          <AppBar
+            position="fixed"
+            elevation={0}
+            sx={{
+              background: "rgba(0,0,0,0.35)",
+              backdropFilter: "blur(3px)",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <NavBar />
+          </AppBar>
+          {children}
+        </Providers>
       </body>
     </html>
   );

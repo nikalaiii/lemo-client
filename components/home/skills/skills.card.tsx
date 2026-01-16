@@ -3,7 +3,7 @@ import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import StackedLineChartIcon from "@mui/icons-material/StackedLineChart";
 import Image from "next/image";
 import React from "react";
-import { motion, scale } from "motion/react";
+import { motion } from "motion/react";
 
 function LineDecoration() {
   return (
