@@ -23,7 +23,6 @@ export default function TriggerGlitchEffect() {
           position: "fixed",
           top: 30,
           left: 30,
-          zIndex: 1000000000,
         }}
       >
         BREAK LIGHT ⚡

@@ -23,20 +23,24 @@ const NavBar = () => {
   const handleClick = () => {
       if (!clicked) {
         startGlitch();
+        router.push('/');
         return setClicked(true);
       } else { 
-        router.refresh();
+        router.push('/');
       }
   }
 
   return (
-    <Toolbar sx={{ minHeight: "72px" }}>
+    <Toolbar sx={{ minHeight: "72px", zIndex: 1000000000000000 }}>
       <GlitchOverlay active={trigger} />
-      <Container
+      <Box
         sx={{
+          width: "100%",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexDirection: "row",
+          background: 'none',
         }}
       >
         {/* Логотип */}
@@ -48,7 +52,7 @@ const NavBar = () => {
             gap: 5,
           }}
         >
-          <Box onClick={() => handleClick()} sx={{ display: "flex", alignItems: "center" }}>
+          <Box onClick={() => handleClick()} sx={{ display: "flex", alignItems: "center", background: "none" }}>
             <LemoCircle isClicked={clicked} />
            <LemoWordmark />
           </Box>
@@ -61,10 +65,10 @@ const NavBar = () => {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-          <NavButton variant="contained" text="Register" href='/register'/>
-          <NavButton variant="outlined" text="Login" href='/login'/>
+          <NavButton variant="contained" text="Register" href='/auth/register'/>
+          <NavButton variant="outlined" text="Login" href='/auth/login'/>
         </Box>
-      </Container>
+      </Box>
     </Toolbar>
   );
 };

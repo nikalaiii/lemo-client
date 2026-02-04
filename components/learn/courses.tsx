@@ -4,7 +4,16 @@ import * as React from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import { Container, Typography } from "@mui/material";
+import { Container, Grid, Typography } from "@mui/material";
+import SelectComponent from "../shared/select";
+
+const EXAMPLE_LESSONS = [
+  "lesson-1: Market",
+  "lesson-1: Prices",
+  "lesson-3: Actions",
+  "lesson-4: Words",
+  "lesson-5: Crypto",
+];
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -105,12 +114,22 @@ const Courses = () => {
         backgroundColor: "#000",
       }}
     >
-      <Typography variant="h2">
-        Watch any lessons{" "}
-        <span style={{ color: "rgba(46, 204, 113, 0.75)" }}>FOR</span>{" "}
-        <span style={{ color: "rgba(192, 57, 43, 0.8)" }}>FREE</span>
-      </Typography>
-      <BasicTabs />
+      <Grid container sx={{ width: "100%" }}>
+        <Grid size={{ xs: 12 }}>
+          <Typography variant="h2">
+            Watch any lessons{" "}
+            <span style={{ color: "rgba(46, 204, 113, 0.75)" }}>FOR</span>{" "}
+            <span style={{ color: "rgba(192, 57, 43, 0.8)" }}>FREE</span>
+          </Typography>
+        </Grid>
+        <Grid size={{ xs: 8 }}>
+          <BasicTabs />
+        </Grid>
+
+        <Grid size={{ xs: 4 }}>
+          <SelectComponent values={EXAMPLE_LESSONS} />
+        </Grid>
+      </Grid>
     </Container>
   );
 };

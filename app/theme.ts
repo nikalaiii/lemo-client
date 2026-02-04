@@ -21,7 +21,7 @@ export const theme = createTheme({
       xs: 0,
       sm: 600,
       md: 900,
-      lg: 1920, 
+      lg: 1920,
       xl: 2560,
     },
   },
@@ -44,6 +44,49 @@ export const theme = createTheme({
   },
 
   components: {
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 0,
+          backgroundColor: "#000",
+          color: "#fff",
+
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#fff",
+          },
+
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#fff",
+          },
+
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#fff",
+          },
+        },
+
+        input: {
+          padding: "12px 14px",
+
+          "&:-webkit-autofill": {
+            WebkitBoxShadow: "0 0 0 1000px #000 inset",
+            WebkitTextFillColor: "#fff",
+            caretColor: "#fff",
+            transition: "background-color 9999s ease-out",
+          },
+        },
+      },
+    },
+
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          pointerEvents: "none",
+          color: "#fff",
+        },
+      },
+    },
+
+
     MuiAppBar: {
       styleOverrides: {
         root: {
@@ -56,10 +99,22 @@ export const theme = createTheme({
     MuiContainer: {
       styleOverrides: {
         root: {
-          padding: 0,
-        }
-      }
+          paddingLeft: 0,
+          paddingRight: 0,
+          width: "100%", // явно
+          maxWidth: "1280px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          minHeight: "90vh",
+          marginLeft: "auto",
+          marginRight: "auto",
+          backgroundColor: "#000",
+          mt: "10vh",
+        },
+      },
     },
+
     MuiToolbar: {
       styleOverrides: {
         root: {
@@ -70,90 +125,91 @@ export const theme = createTheme({
         },
       },
     },
-     MuiButton: {
-  defaultProps: {
-    disableRipple: true,
-    variant: "contained",
-    color: "primary",
-  },
-  styleOverrides: {
-    root: {
-      position: "relative",
-      overflow: "visible", // даємо тіням вийти за межі
-      borderRadius: 0,
-      textTransform: "none",
-      fontWeight: 500,
-      fontSize: "16px",
-      paddingInline: "2rem",
-      paddingBlock: "0.55rem",
-      opacity: 0.85,
-      "&:hover": {
-        opacity: 1,
-      },
 
-      // базові параметри обох “тіней”
-      "&::before, &::after": {
-        content: '""',
-        position: "absolute",
-        left: 0,       // трохи ширші за кнопку
-        right: 0,
-        height: "10px",
-        opacity: 0,
-        transform: "skewX(-18deg) translateY(0)",
-        transformOrigin: "center",
-        transition: "opacity .22s ease-out, transform .22s ease-out",
-        pointerEvents: "none",
+    MuiButton: {
+      defaultProps: {
+        disableRipple: true,
+        variant: "contained",
+        color: "primary",
       },
+      styleOverrides: {
+        root: {
+          position: "relative",
+          overflow: "visible", // даємо тіням вийти за межі
+          borderRadius: 0,
+          textTransform: "none",
+          fontWeight: 500,
+          fontSize: "16px",
+          paddingInline: "2rem",
+          paddingBlock: "0.55rem",
+          opacity: 0.85,
+          "&:hover": {
+            opacity: 1,
+          },
 
-      // верхня зелена
-      "&::before": {
-        top: 0,
-        backgroundColor: "rgba(46, 204, 113, 0.75)", // зелена, напівпрозора
-      },
+          // базові параметри обох “тіней”
+          "&::before, &::after": {
+            content: '""',
+            position: "absolute",
+            left: 0, // трохи ширші за кнопку
+            right: 0,
+            height: "10px",
+            opacity: 0,
+            transform: "skewX(-18deg) translateY(0)",
+            transformOrigin: "center",
+            transition: "opacity .22s ease-out, transform .22s ease-out",
+            pointerEvents: "none",
+          },
 
-      // нижня червона
-      "&::after": {
-        bottom: 0,
-        backgroundColor: "rgba(192, 57, 43, 0.8)", // червона, напівпрозора
-      },
+          // верхня зелена
+          "&::before": {
+            top: 0,
+            backgroundColor: "rgba(46, 204, 113, 0.75)", // зелена, напівпрозора
+          },
 
-      // при hover “тіні” виїжджають за межі кнопки
-      "&:hover::before": {
-        opacity: 1,
-        transform: "skewX(-18deg) translateY(-120%)", // вверх, як верхня тінь
-      },
-      "&:hover::after": {
-        opacity: 1,
-        transform: "skewX(-18deg) translateY(120%)",  // вниз, як нижня тінь
-      },
-    },
-  },
-  variants: [
-    {
-      props: { variant: "contained", color: "primary" },
-      style: {
-        backgroundColor: "#ffffff",
-        color: "#000000",
-        border: "1px solid transparent",
-        "&:hover": {
-          backgroundColor: "#f5f5f5",
-          borderColor: "transparent",
+          // нижня червона
+          "&::after": {
+            bottom: 0,
+            backgroundColor: "rgba(192, 57, 43, 0.8)", // червона, напівпрозора
+          },
+
+          // при hover “тіні” виїжджають за межі кнопки
+          "&:hover::before": {
+            opacity: 1,
+            transform: "skewX(-18deg) translateY(-120%)", // вверх, як верхня тінь
+          },
+          "&:hover::after": {
+            opacity: 1,
+            transform: "skewX(-18deg) translateY(120%)", // вниз, як нижня тінь
+          },
         },
       },
-    },
-    {
-      props: { variant: "outlined", color: "primary" },
-      style: {
-        backgroundColor: "transparent",
-        color: "#ffffff",
-        border: "1px solid #ffffff",
-        "&:hover": {
-          backgroundColor: "rgba(255,255,255,0.08)",
-          borderColor: "#ffffff",
+      variants: [
+        {
+          props: { variant: "contained", color: "primary" },
+          style: {
+            backgroundColor: "#ffffff",
+            color: "#000000",
+            border: "1px solid transparent",
+            "&:hover": {
+              backgroundColor: "#f5f5f5",
+              borderColor: "transparent",
+            },
+          },
         },
-      },
+        {
+          props: { variant: "outlined", color: "primary" },
+          style: {
+            backgroundColor: "transparent",
+            color: "#ffffff",
+            border: "1px solid #ffffff",
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.08)",
+              borderColor: "#ffffff",
+            },
+          },
+        },
+      ],
     },
-  ],
-},
   },
 });

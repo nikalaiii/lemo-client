@@ -3,7 +3,7 @@ import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import StackedLineChartIcon from "@mui/icons-material/StackedLineChart";
 import Image from "next/image";
 import React from "react";
-import { motion, scale } from "motion/react";
+import { motion } from "motion/react";
 
 function LineDecoration() {
   return (
@@ -33,8 +33,8 @@ const SkillsCard: React.FC<Props> = ({ type, bottom, left, rotate, z }) => {
       container
       spacing={1}
       sx={{
-        minWidth: "40%",
-        maxWidth: "40%",
+        width: "40%",
+        maxWidth: "650px",
         height: "70vh",
         border: "1px solid #fff",
         borderRadius: "10px",

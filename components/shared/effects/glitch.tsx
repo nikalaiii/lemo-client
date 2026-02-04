@@ -21,7 +21,7 @@ export default function GlitchOverlay({ active }: { active: boolean }) {
     renderer.domElement.style.position = "fixed";
     renderer.domElement.style.inset = "0";
     renderer.domElement.style.pointerEvents = "none"; // 🔥 проходять кліки
-    renderer.domElement.style.zIndex = "999999";
+    renderer.domElement.style.zIndex = "1";
 
     mountRef.current.appendChild(renderer.domElement);
 
@@ -70,7 +70,7 @@ export default function GlitchOverlay({ active }: { active: boolean }) {
         position: "fixed",
         inset: 0,
         pointerEvents: "none",
-        zIndex: 999999,
+
       }}
     />
   );

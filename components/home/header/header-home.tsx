@@ -8,7 +8,6 @@ const HeaderHome = () => {
   return (
     <>
       {/* Фіксований навбар зверху */}
-      
 
       {/* Спейсер під AppBar, щоб контент не залазив під нього */}
       <Toolbar />
@@ -40,22 +39,21 @@ const HeaderHome = () => {
         <Container
           sx={{
             position: "relative",
-            margin: "auto",
             maxWidth: "1920px",
             width: "100%",
             zIndex: 1,
             height: "100%",
             display: "flex",
-            alignItems: "center",
+            flexDirection: "row",
             justifyContent: "space-between", // центруємо блок по вертикалі в хедері
-
+            background: "none",
           }}
         >
           <Typography
             variant="h1"
             sx={{ fontWeight: "800", fontSize: "50px", whiteSpace: "nowrap" }}
           >
-            Check | Trade | Check
+            Check | Trade | Profit
           </Typography>
           <HeaderInfo />
         </Container>

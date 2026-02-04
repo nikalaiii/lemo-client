@@ -31,14 +31,7 @@ const Market = () => {
   return (
     <Container
       sx={{
-        mt: '10vh',
-        display: "flex",
-        flexDirection: "column",
         justifyContent: "flex-end",
-        alignItems: "center",
-        minHeight: "90vh",
-        maxWidth: "1200px",
-        backgroundColor: "#000",
         position: "relative",
       }}
     >

@@ -25,7 +25,7 @@ const LemoWordmark = () => {
       whileHover="hover"
       style={{ cursor: "pointer" }}
     >
-      <rect width="200" height="64" fill="black" />
+      <rect width="200" height="64" fill="none" />
 
       {/* L */}
       <motion.g

@@ -68,9 +68,6 @@ useEffect(() => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        maxWidth: "1200px",
-        maxHeight: "90vh",
-        margin: 'auto',
         backgroundColor: "#000",
       }}
     >

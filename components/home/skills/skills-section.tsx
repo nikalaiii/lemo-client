@@ -11,19 +11,21 @@ const Skills = () => {
   return (
     <Container
       sx={{
-        maxWidth: "1200px",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
         alignItems: "flex-end",
         gap: 10,
-        backgroundColor: "#000",
         zIndex: 5,
         position: "relative",
-        mt: "10vh",
       }}
     >
-      <Typography variant="h2" sx={{ ml: "auto", textAlign: "right" }}>
+      <Typography
+        variant="h2"
+        sx={{
+          fontWeight: 800,
+          fontSize: { xs: "32px", md: "48px" },
+          ml: "auto",
+          textAlign: "right",
+        }}
+      >
         Improve your skills, get Certification!
       </Typography>
 
