@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { Candle, CandleProps } from "./candle";
+import { Candledecoration, CandleProps } from "./candle";
 import DrawCircle from "./circle-animate";
 import  { MotionUnderline } from "./animate-line";
 import DrawArrow from "./arrow-animate";
@@ -136,7 +136,7 @@ const MarketSlicePreview: React.FC = () => {
           }}
         >
           {marketSlice.map((candle, index) => (
-            <Candle
+            <Candledecoration
               key={index}
               width={10}            // 🔹 вужчі свічки
               height={CHART_HEIGHT} // 🔹 високі свічки

@@ -31,7 +31,7 @@ const NavBar = () => {
   }
 
   return (
-    <Toolbar sx={{ minHeight: "72px", zIndex: 1000000000000000 }}>
+    <Box sx={{ minHeight: 72, display: "flex", alignItems: "center" }}>
       <GlitchOverlay active={trigger} />
       <Box
         sx={{
@@ -59,7 +59,7 @@ const NavBar = () => {
           {/* Навігація */}
           <Box sx={{ display: "flex", gap: 4 }}>
             <NavLink text="Learn" href="/learn"></NavLink>
-            <NavLink text="Community" href="/community"></NavLink>
+            <NavLink text="redactor" href="/redactor"></NavLink>
             <NavLink text="About Us" href="/about"></NavLink>
           </Box>
         </Box>
@@ -69,7 +69,7 @@ const NavBar = () => {
           <NavButton variant="outlined" text="Login" href='/auth/login'/>
         </Box>
       </Box>
-    </Toolbar>
+    </Box>
   );
 };
 

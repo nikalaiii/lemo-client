@@ -2,7 +2,7 @@
 
 import { Box } from "@mui/material";
 import React from "react";
-import { Candle } from "../home/journal/candle";
+import { Candledecoration } from "../home/journal/candle";
 import { useSyntheticMarket } from "@/hooks/useRandomMarket";
 import { CandleType } from "@/hooks/useBinanceMarket";
 // import useBinanceKlines, { CandleType } from "@/hooks/useBinanceMarket";
@@ -69,7 +69,7 @@ const RealtimeBackground: React.FC = () => {
         }}
       >
         {visible.map((c, index) => (
-          <Candle
+          <Candledecoration
           type="b/w"
             key={`candle-${visible.length}-${index}`}
             width={candleWidth}

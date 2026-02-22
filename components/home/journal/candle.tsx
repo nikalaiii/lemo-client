@@ -13,7 +13,7 @@ export interface CandleProps {
   type?: "b/w" | "g/r";
 }
 
-export const Candle: React.FC<CandleProps> = ({
+export const Candledecoration: React.FC<CandleProps> = ({
   width = 24,
   height = 64,
   high,
