@@ -2,85 +2,94 @@
 
 import React from "react";
 
-/** Y increases downward. open/close are body ends; wickTop/wickBottom are wick ends. */
-export type CandleDirection = "up" | "down";
+export interface Candle {
+  open: number; // price
+  high: number; // price
+  low: number; // price
+  close: number; // price
+  timestamp: number;
+}
 
-type CandleCallback = (
-  y: number,
-  key: "open" | "close" | "wickTop" | "wickBottom",
-) => void;
+export interface ChartViewport {
+  minPrice: number;
+  maxPrice: number;
+  height: number; // px
+}
 
-export interface CandleProps {
-  width: number;
-  height: number;
+export interface CandleRenderProps {
+  candle: Candle;
   centerX: number;
-
-  /** Body: Y of opening price (one end of body). */
-  open: number;
-  /** Body: Y of closing price (other end of body). */
-  close: number;
-  /** Upper wick end (top of candle). */
-  wickTop: number;
-  /** Lower wick end (bottom of candle). */
-  wickBottom: number;
-
   bodyWidth: number;
-  isEditing: boolean;
-  type?: "b/w" | "g/r";
+  viewport: ChartViewport;
+  isEditing?: boolean;
 
-  onChangeOpen?: CandleCallback;
-  onChangeClose?: CandleCallback;
-  onChangeWickTop?: CandleCallback;
-  onChangeWickBottom?: CandleCallback;
+  onChangeOpen?: (price: number) => void;
+  onChangeClose?: (price: number) => void;
+  onChangeHigh?: (price: number) => void;
+  onChangeLow?: (price: number) => void;
 }
 
-/** Derive body bounds and direction from open/close. */
-function useCandleGeometry(open: number, close: number) {
-  const bodyTop = Math.min(open, close);
-  const bodyBottom = Math.max(open, close);
-  const bodyHeight = Math.max(0, bodyBottom - bodyTop);
-  const direction: CandleDirection = close < open ? "up" : "down";
-  return { bodyTop, bodyBottom, bodyHeight, direction };
-}
+const priceToY = (
+  price: number,
+  minPrice: number,
+  maxPrice: number,
+  chartHeight: number,
+) => {
+  const percent = (price - minPrice) / (maxPrice - minPrice || 1);
+  return chartHeight - percent * chartHeight;
+};
 
-export const Candle: React.FC<CandleProps> = ({
-  width,
-  height,
+const yToPrice = (
+  y: number,
+  minPrice: number,
+  maxPrice: number,
+  chartHeight: number,
+) => {
+  const percent = 1 - y / (chartHeight || 1);
+  return minPrice + percent * (maxPrice - minPrice);
+};
+
+export const Candle: React.FC<CandleRenderProps> = ({
+  candle,
   centerX,
-  open,
-  close,
-  wickTop,
-  wickBottom,
   bodyWidth,
+  viewport,
   isEditing = false,
   onChangeOpen,
   onChangeClose,
-  onChangeWickTop,
-  onChangeWickBottom,
+  onChangeHigh,
+  onChangeLow,
 }) => {
-  const { bodyTop, bodyBottom, bodyHeight, direction } = useCandleGeometry(
-    open,
-    close,
-  );
+  const { minPrice, maxPrice, height } = viewport;
+  const openY = priceToY(candle.open, minPrice, maxPrice, height);
+  const closeY = priceToY(candle.close, minPrice, maxPrice, height);
+  const highY = priceToY(candle.high, minPrice, maxPrice, height);
+  const lowY = priceToY(candle.low, minPrice, maxPrice, height);
+
+  const bodyTop = Math.min(openY, closeY);
+  const bodyBottom = Math.max(openY, closeY);
+  const bodyHeight = Math.max(0, bodyBottom - bodyTop);
   const bodyX = centerX - bodyWidth / 2;
-  const isBull = direction === "up";
+
+  const isBull = candle.close > candle.open;
   const color = isBull ? "#16a34a" : "#dc2626";
   const HANDLE_SIZE = 8;
 
   const startDrag = (
     e: React.MouseEvent,
-    callback: CandleCallback | undefined,
-    key: "open" | "close" | "wickTop" | "wickBottom",
+    cb: ((price: number) => void) | undefined,
+    key: "open" | "close" | "high" | "low",
   ) => {
     e.stopPropagation();
-    if (!callback) return;
+    if (!cb) return;
 
     const move = (ev: MouseEvent) => {
       const svg = (e.target as SVGElement).ownerSVGElement;
       if (!svg) return;
       const rect = svg.getBoundingClientRect();
       const newY = ev.clientY - rect.top;
-      callback(newY, key);
+      const price = yToPrice(newY, minPrice, maxPrice, height);
+      cb(price);
     };
 
     const up = () => {
@@ -93,64 +102,68 @@ export const Candle: React.FC<CandleProps> = ({
   };
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-      {/* Wick: from wickTop to wickBottom */}
+    <svg width={bodyWidth * 2} height={height} viewBox={`0 0 ${bodyWidth * 2} ${height}`}>
+      {/* Wick */}
       <line
         x1={centerX}
-        y1={wickTop}
+        y1={highY}
         x2={centerX}
-        y2={wickBottom}
+        y2={lowY}
         stroke={color}
         strokeWidth={2}
         strokeLinecap="round"
       />
 
-      {/* Body: from bodyTop to bodyBottom */}
+      {/* Body */}
       <rect
         x={bodyX}
         y={bodyTop}
         width={bodyWidth}
-        height={bodyHeight}
+        height={bodyHeight || 1}
         fill={color}
         rx={1}
       />
 
       {isEditing && (
         <>
+          {/* High handle */}
           <circle
             cx={centerX}
-            cy={wickTop}
+            cy={highY}
             r={HANDLE_SIZE}
             fill="#fff"
             stroke="#000"
-            onMouseDown={(e) => startDrag(e, onChangeWickTop, "wickTop")}
+            onMouseDown={(e) => startDrag(e, onChangeHigh, "high")}
             style={{ cursor: "ns-resize" }}
           />
+
+          {/* Low handle */}
           <circle
             cx={centerX}
-            cy={wickBottom}
+            cy={lowY}
             r={HANDLE_SIZE}
             fill="#fff"
             stroke="#000"
-            onMouseDown={(e) => startDrag(e, onChangeWickBottom, "wickBottom")}
+            onMouseDown={(e) => startDrag(e, onChangeLow, "low")}
             style={{ cursor: "ns-resize" }}
           />
-          {/* Body open handle (one end of body) */}
-          <rect
-            x={centerX - HANDLE_SIZE}
-            y={open - HANDLE_SIZE}
-            width={bodyWidth}
-            height={HANDLE_SIZE * 2}
+
+          {/* Open handle */}
+          <circle
+            cx={centerX}
+            cy={openY}
+            r={HANDLE_SIZE}
             fill="#fff"
             stroke="#000"
             onMouseDown={(e) => startDrag(e, onChangeOpen, "open")}
             style={{ cursor: "ns-resize" }}
           />
-          <rect
-            x={centerX - HANDLE_SIZE}
-            y={close - HANDLE_SIZE}
-            width={bodyWidth}
-            height={HANDLE_SIZE * 2}
+
+          {/* Close handle */}
+          <circle
+            cx={centerX}
+            cy={closeY}
+            r={HANDLE_SIZE}
             fill="#fff"
             stroke="#000"
             onMouseDown={(e) => startDrag(e, onChangeClose, "close")}
@@ -161,3 +174,5 @@ export const Candle: React.FC<CandleProps> = ({
     </svg>
   );
 };
+
+export { priceToY, yToPrice };
