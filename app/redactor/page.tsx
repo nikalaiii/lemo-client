@@ -8,6 +8,11 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
+import { calculateEMA } from "./hooks/useEMA";
+import EmaMetric from "@/components/redactor/Ema";
+import RightBar from "@/components/redactor/RightBar";
+import calculateMACD, { MACDResult } from "./hooks/useMACD";
+import MacdMetric from "@/components/redactor/MacdMetric";
 
 type CandleWithMeta = Candle & { id: number; isEditing: boolean };
 
@@ -21,7 +26,7 @@ type EditKey = "open" | "close" | "high" | "low";
 const DEFAULT_MIN_PRICE = 0;
 const DEFAULT_MAX_PRICE = 100;
 
-interface MarketConfig {
+export interface MarketConfig {
   traders: number;
   targetCandles: number;
   balance: number;
@@ -35,14 +40,37 @@ const RedactorPage = () => {
   const [spawningIndex, setSpawningIndex] = useState<number | null>(null);
   const [chartHeight, setChartHeight] = useState<number>(0);
   const [viewport, setViewport] = useState<ChartViewport | null>(null);
+  const [canStart, setCanstart] = useState<boolean>(false);
+  const [ema20, setEma20] = useState<number[] | null>(null);
+  const [macdData, setMacdData] = useState<MACDResult | null>(null);
   const [config, setConfig] = useState<MarketConfig>({
     traders: 10,
     targetCandles: 5,
     balance: 10_000,
   });
+  // compute indicators in memo blocks; the helpers themselves are pure functions
+  const emaValues = useMemo(() => calculateEMA(candles, 20), [candles]);
+
+  const macdResult = useMemo(
+    () =>
+      calculateMACD({
+        candles,
+        period1: 12,
+        period2: 26,
+        periodSignal: 9,
+      }),
+    [candles],
+  );
+
+  const slotsCount = useMemo(
+    () => Math.max(1, candles.length + 1),
+    [candles.length],
+  );
+
+  const slotsWidth = slotsCount * candleSlotWidth + (slotsCount - 1) * 8;
 
   const cellWidth = candleSlotWidth; // ширина слота
-  const cellHeight = 32; // можна залишити фіксованою по вертикаліF
+  const cellHeight = 32; // можна залишити фіксованою по вертикалі
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -54,6 +82,40 @@ const RedactorPage = () => {
       height: h,
     });
   }, []);
+
+  useEffect(() => {
+    if (candles.length >= config.targetCandles && candles.length > 0) {
+      setCanstart(true);
+    }
+  }, [candles.length, config.targetCandles]);
+
+  async function handleEmaGenerate() {
+    try {
+      if (!canStart || candles.length === 0) {
+        setEma20(null);
+        return;
+      }
+
+      setEma20(emaValues || null);
+    } catch (error) {
+      console.error("Error generating EMA:", error);
+      setEma20(null);
+    }
+  }
+
+  async function handleMacdGenerate() {
+    try {
+      if (!canStart || candles.length === 0) {
+        setMacdData(null);
+        return;
+      }
+
+      setMacdData(macdResult || null);
+    } catch (error) {
+      console.error("Error generating MACD:", error);
+      setMacdData(null);
+    }
+  }
 
   // Extend viewport only outward based on finalized candles
   useEffect(() => {
@@ -99,11 +161,6 @@ const RedactorPage = () => {
       return { ...prev, minPrice, maxPrice, height: chartHeight };
     });
   }, [candles, chartHeight]);
-
-  const slotsCount = useMemo(
-    () => Math.max(1, candles.length + 1),
-    [candles.length],
-  );
 
   const scenarioLabel = useMemo(() => {
     if (candles.length === 0) return "create the first candle";
@@ -254,11 +311,13 @@ const RedactorPage = () => {
   return (
     <Box sx={{ height: "100vh", width: "100vw", background: "#000" }}>
       <RightBar
+        handleEmaClick={handleEmaGenerate}
+        hanldeMacdClick={handleMacdGenerate}
         config={config}
         setConfig={setConfig}
         scenarioLabel={scenarioLabel}
         remainingToCreate={remainingToCreate}
-        canStart={candles.length >= config.targetCandles && candles.length > 0}
+        canStart
       />
 
       <Box
@@ -291,88 +350,119 @@ const RedactorPage = () => {
         {viewport ? (
           <Box
             sx={{
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "center",
-              gap: 1,
-              width: "100%",
+              position: "relative",
+              width: slotsWidth,
+              margin: "0 auto",
               height: "100%",
             }}
           >
-            {Array.from({ length: slotsCount }).map((_, index) => {
-              const candle = candles[index];
-              const isSpawnSlot = spawningIndex === index && spawningCandle;
-              const isFirstEmpty =
-                candles.length === 0 && index === 0 && !candle && !isSpawnSlot;
+            {canStart && ema20 && (
+              <EmaMetric
+                width={slotsWidth}
+                values={ema20}
+                viewport={viewport}
+                candleSlotWidth={candleSlotWidth}
+              />
+            )}
 
-              return (
-                <CandleSlot
-                  key={index}
-                  width={candleSlotWidth}
-                  handleClick={(e) => handleClickSlot(e, index)}
-                  isSpawning={
-                    spawningIndex === index || index === candles.length
-                  }
-                >
-                  {candle && viewport && (
-                    <Candle
-                      candle={candle}
-                      centerX={candleSlotWidth / 2}
-                      bodyWidth={18}
-                      viewport={viewport}
-                      isEditing={candle.isEditing}
-                      onChangeOpen={(price) =>
-                        handleEditCandle(index, "open", price)
-                      }
-                      onChangeClose={(price) =>
-                        handleEditCandle(index, "close", price)
-                      }
-                      onChangeHigh={(price) =>
-                        handleEditCandle(index, "high", price)
-                      }
-                      onChangeLow={(price) =>
-                        handleEditCandle(index, "low", price)
-                      }
-                    />
-                  )}
-                  {isSpawnSlot && spawningCandle && viewport && (
-                    <Candle
-                      candle={spawningCandle}
-                      centerX={candleSlotWidth / 2}
-                      bodyWidth={18}
-                      viewport={viewport}
-                    />
-                  )}
-                  {isFirstEmpty && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "100%",
-                        transform: "translate(12px, -50%)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        pointerEvents: "none",
-                      }}
-                    >
+            {canStart && macdData && macdData.signalLine && (
+              <MacdMetric
+                width={slotsWidth}
+                macdLine={macdData.macdLine}
+                signalLine={macdData.signalLine}
+                viewport={viewport}
+                candleSlotWidth={candleSlotWidth}
+              />
+            )}
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "stretch",
+                justifyContent: "center",
+                gap: 1,
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              {Array.from({ length: slotsCount }).map((_, index) => {
+                const candle = candles[index];
+                const isSpawnSlot = spawningIndex === index && spawningCandle;
+                const isFirstEmpty =
+                  candles.length === 0 &&
+                  index === 0 &&
+                  !candle &&
+                  !isSpawnSlot;
+
+                return (
+                  <CandleSlot
+                    key={index}
+                    width={candleSlotWidth}
+                    handleClick={(e) => handleClickSlot(e, index)}
+                    isSpawning={
+                      spawningIndex === index || index === candles.length
+                    }
+                  >
+                    {candle && viewport && (
+                      <Candle
+                        candle={candle}
+                        centerX={candleSlotWidth / 2}
+                        bodyWidth={18}
+                        viewport={viewport}
+                        isEditing={candle.isEditing}
+                        onChangeOpen={(price) =>
+                          handleEditCandle(index, "open", price)
+                        }
+                        onChangeClose={(price) =>
+                          handleEditCandle(index, "close", price)
+                        }
+                        onChangeHigh={(price) =>
+                          handleEditCandle(index, "high", price)
+                        }
+                        onChangeLow={(price) =>
+                          handleEditCandle(index, "low", price)
+                        }
+                      />
+                    )}
+                    {isSpawnSlot && spawningCandle && viewport && (
+                      <Candle
+                        candle={spawningCandle}
+                        centerX={candleSlotWidth / 2}
+                        bodyWidth={18}
+                        viewport={viewport}
+                      />
+                    )}
+                    {isFirstEmpty && (
                       <Box
                         sx={{
-                          width: 0,
-                          height: 0,
-                          borderTop: "6px solid transparent",
-                          borderBottom: "6px solid transparent",
-                          borderLeft: "10px solid #e5e7eb",
+                          position: "absolute",
+                          top: "50%",
+                          left: "100%",
+                          transform: "translate(12px, -50%)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          pointerEvents: "none",
                         }}
-                      />
-                      <Typography variant="body1" color="#e5e7eb">
-                        create the first candle
-                      </Typography>
-                    </Box>
-                  )}
-                </CandleSlot>
-              );
-            })}
+                      >
+                        <Box
+                          sx={{
+                            width: 0,
+                            height: 0,
+                            borderTop: "6px solid transparent",
+                            borderBottom: "6px solid transparent",
+                            borderLeft: "10px solid #e5e7eb",
+                          }}
+                        />
+                        <Typography variant="body1" color="#e5e7eb">
+                          create the first candle
+                        </Typography>
+                      </Box>
+                    )}
+                  </CandleSlot>
+                );
+              })}
+            </Box>
           </Box>
         ) : (
           <CircularProgress />
@@ -409,113 +499,9 @@ const CandleSlot = ({
   </div>
 );
 
-interface RightBarProps {
-  config: MarketConfig;
-  setConfig: (cfg: MarketConfig) => void;
-  scenarioLabel: string;
-  remainingToCreate: number;
-  canStart: boolean;
-}
-
-const RightBar: React.FC<RightBarProps> = ({
-  config,
-  setConfig,
-  scenarioLabel,
-  remainingToCreate,
-  canStart,
-}) => {
-  const handleNumberChange = (key: keyof MarketConfig, value: string): void => {
-    const num = Number(value.replace(/[^\d.-]/g, ""));
-    if (Number.isNaN(num)) return;
-    setConfig({ ...config, [key]: num });
-  };
-
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        top: TOP_BAR_HEIGHT,
-        right: 0,
-        bottom: 0,
-        width: RIGHT_BAR_WIDTH,
-        borderLeft: "1px solid #111827",
-        backgroundColor: "#020617",
-        color: "#e5e7eb",
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-        p: 3,
-      }}
-    >
-      <Box>
-        <Typography variant="overline" sx={{ color: "#9ca3af" }}>
-          Scenario
-        </Typography>
-        <Typography variant="h6">{scenarioLabel}</Typography>
-        {remainingToCreate > 0 && (
-          <Typography variant="body2" sx={{ color: "#9ca3af", mt: 0.5 }}>
-            create {remainingToCreate} more candles
-          </Typography>
-        )}
-      </Box>
-
-      <Box>
-        <Typography variant="overline" sx={{ color: "#9ca3af" }}>
-          Market configuration
-        </Typography>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          Set market information for the current scenario.
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TextField
-            label="Number of traders"
-            type="number"
-            size="small"
-            value={config.traders}
-            onChange={(e) => handleNumberChange("traders", e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Number of candles"
-            type="number"
-            size="small"
-            value={config.targetCandles}
-            onChange={(e) =>
-              handleNumberChange("targetCandles", e.target.value)
-            }
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Current balance"
-            type="number"
-            size="small"
-            value={config.balance}
-            onChange={(e) => handleNumberChange("balance", e.target.value)}
-            InputLabelProps={{ shrink: true }}
-          />
-        </Box>
-      </Box>
-
-      <Box sx={{ mt: "auto" }}>
-        {canStart ? (
-          <Button
-            variant="contained"
-            color="success"
-            fullWidth
-            onClick={() => {
-              // placeholder for future start logic
-              // eslint-disable-next-line no-console
-              console.log("Start scenario", { config });
-            }}
-          >
-            Start
-          </Button>
-        ) : (
-          <Typography variant="body2" sx={{ color: "#6b7280" }}>
-            Create the required number of candles to start.
-          </Typography>
-        )}
-      </Box>
-    </Box>
-  );
-};
+/* шо осталось зробить? 
+в целом сам редактор і його система позиционирование працює добре, тепер треба сделать валотильность, тобто у кожного слота має бути паралельно 
+свеча яка буде указувать на валотильность основной свечи. после цього треба создать індикатори ринка, починаем робить EMA а потом від нього\
+уже робим Macd і колідори. якщо то всьо буде готово то осталось навчить фронт делать правильні реквести до сервера і желательно построїть 
+не тільки мутации а й подписки для подальших сокетів
+*/
