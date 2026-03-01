@@ -2,19 +2,21 @@
 import { Candle, ChartViewport, yToPrice } from "@/components/redactor/candle";
 import {
   Box,
-  Button,
   CircularProgress,
-  TextField,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
-import { calculateEMA } from "./hooks/useEMA";
-import EmaMetric from "@/components/redactor/Ema";
+import RsiMetric from "@/components/redactor/RsiMetric";
+import { calculateEMA } from "./features/calculateEMA";
+import EmaMetric from "@/components/redactor/EmaMetric";
 import RightBar from "@/components/redactor/RightBar";
-import calculateMACD, { MACDResult } from "./hooks/useMACD";
+import calculateMACD, { MACDResult } from "./features/calculateMACD";
+import calculateRSI from "./features/calculateRSI";
+import CandleSlot from "@/components/redactor/CandleSlot";
 import MacdMetric from "@/components/redactor/MacdMetric";
+import generateCandles from "./features/generateCandles";
 
-type CandleWithMeta = Candle & { id: number; isEditing: boolean };
+export type CandleWithMeta = Candle & { id: number; isEditing: boolean };
 
 const candleSlotWidth = 40;
 
@@ -25,6 +27,28 @@ type EditKey = "open" | "close" | "high" | "low";
 
 const DEFAULT_MIN_PRICE = 0;
 const DEFAULT_MAX_PRICE = 100;
+
+// Helper that attaches global mousemove/mouseup and forwards clientY
+function ResizeWatcher({
+  onMove,
+  onEnd,
+}: {
+  onMove: (clientY: number) => void;
+  onEnd: () => void;
+}) {
+  useEffect(() => {
+    const move = (e: MouseEvent) => onMove(e.clientY);
+    const up = () => onEnd();
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+  }, [onMove, onEnd]);
+
+  return null;
+}
 
 export interface MarketConfig {
   traders: number;
@@ -43,24 +67,24 @@ const RedactorPage = () => {
   const [canStart, setCanstart] = useState<boolean>(false);
   const [ema20, setEma20] = useState<number[] | null>(null);
   const [macdData, setMacdData] = useState<MACDResult | null>(null);
+  const [rsi14, setRsi14] = useState<number[] | null>(null);
+
   const [config, setConfig] = useState<MarketConfig>({
     traders: 10,
     targetCandles: 5,
     balance: 10_000,
   });
-  // compute indicators in memo blocks; the helpers themselves are pure functions
-  const emaValues = useMemo(() => calculateEMA(candles, 20), [candles]);
+  const [panOffset, setPanOffset] = useState<number>(0);
+  const [panOffsetY, setPanOffsetY] = useState<number>(0);
+  const [scale, setScale] = useState<number>(1);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStartX, setDragStartX] = useState<number>(0);
+  const [dragStartY, setDragStartY] = useState<number>(0);
 
-  const macdResult = useMemo(
-    () =>
-      calculateMACD({
-        candles,
-        period1: 12,
-        period2: 26,
-        periodSignal: 9,
-      }),
-    [candles],
-  );
+  const rsiValues = useMemo(() => {
+    if (candles.length < 2) return null; 
+    return calculateRSI(candles, 14);
+  }, [candles]);
 
   const slotsCount = useMemo(
     () => Math.max(1, candles.length + 1),
@@ -69,8 +93,8 @@ const RedactorPage = () => {
 
   const slotsWidth = slotsCount * candleSlotWidth + (slotsCount - 1) * 8;
 
-  const cellWidth = candleSlotWidth; // ширина слота
-  const cellHeight = 32; // можна залишити фіксованою по вертикалі
+  const cellWidth = candleSlotWidth; 
+  const cellHeight = 32; 
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -89,32 +113,72 @@ const RedactorPage = () => {
     }
   }, [candles.length, config.targetCandles]);
 
-  async function handleEmaGenerate() {
+  async function handleEmaGenerate(period: number = 20) {
     try {
       if (!canStart || candles.length === 0) {
         setEma20(null);
         return;
       }
 
-      setEma20(emaValues || null);
+      setEma20(calculateEMA(candles, period) || null);
     } catch (error) {
       console.error("Error generating EMA:", error);
       setEma20(null);
     }
   }
 
-  async function handleMacdGenerate() {
+  async function handleMacdGenerate(ema1: number = 12, ema2: number = 26, signal: number = 9) {
     try {
       if (!canStart || candles.length === 0) {
         setMacdData(null);
         return;
       }
 
-      setMacdData(macdResult || null);
+      setMacdData(calculateMACD({
+        candles,
+        period1: ema1,
+        period2: ema2,
+        periodSignal: signal,
+      }) || null);
     } catch (error) {
       console.error("Error generating MACD:", error);
       setMacdData(null);
     }
+  }
+
+  useEffect(() => {
+    console.log("rsi14:", rsi14);
+    console.log("rsiValues:", rsiValues);
+    console.log("isArray:", Array.isArray(rsiValues));
+  }, [rsi14, rsiValues]);
+
+  async function handleRsiGenerate(period: number = 14) {
+    try {
+      if (!canStart || candles.length === 0) {
+        setRsi14(null);
+        console.warn("Not enough candles to calculate RSI");
+        return;
+      }
+
+      if (!rsiValues || rsiValues.length === 0) {
+        console.warn(
+          `RSI calculation produced no data (need at least ${14 + 1} candles). ` +
+            "Add more candles or adjust the period.",
+        );
+        setRsi14(null);
+        return;
+      }
+
+      setRsi14(calculateRSI(candles, period));
+    } catch (error) {
+      console.error("Error generating RSI:", error);
+      setRsi14(null);
+    }
+  }
+
+  async function handleCandlesGenerate(candlesCount: number) {
+    const newCandles = generateCandles(candlesCount, candles[candles.length - 1]?.close);
+    setCandles(prev => [...prev, ...newCandles]);
   }
 
   // Extend viewport only outward based on finalized candles
@@ -193,9 +257,10 @@ const RedactorPage = () => {
         );
       } else {
         setCandles((prev) => prev.map((c) => ({ ...c, isEditing: false })));
+        const prevuisClose = candles[index - 1]?.close ?? priceAtClick;
         setSpawningCandle({
           id: Date.now(),
-          open: priceAtClick,
+          open: prevuisClose,
           close: priceAtClick,
           high: priceAtClick,
           low: priceAtClick,
@@ -307,18 +372,117 @@ const RedactorPage = () => {
   }
 
   const remainingToCreate = Math.max(config.targetCandles - candles.length, 0);
+  const MACD_MIN = 80;
+  const MACD_MAX = 600;
+  const RSI_MIN = 80;
+  const RSI_MAX = 600;
+
+  const [macdHeight, setMacdHeight] = useState<number>(200);
+  const [rsiHeight, setRsiHeight] = useState<number>(200);
+  const [resizingPanel, setResizingPanel] = useState<null | "macd" | "rsi">(
+    null,
+  );
+  const [resizeStartY, setResizeStartY] = useState<number>(0);
+  const [resizeStartHeight, setResizeStartHeight] = useState<number>(0);
+
+  const handleChartMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only pan if not clicking on a candle slot to edit
+    if ((e.target as HTMLElement).classList.contains("candleSlot")) return;
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setDragStartY(e.clientY);
+  };
+
+  const handleChartMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - dragStartX;
+    const deltaY = e.clientY - dragStartY;
+    setPanOffset((prev) => prev + deltaX);
+    setPanOffsetY((prev) => prev + deltaY);
+    setDragStartX(e.clientX);
+    setDragStartY(e.clientY);
+  };
+
+  const handleChartMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleChartWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.min(Math.max(scale * zoomAmount, 0.5), 3);
+    setScale(newScale);
+  };
+
+  //#region MARCUP  
 
   return (
     <Box sx={{ height: "100vh", width: "100vw", background: "#000" }}>
       <RightBar
         handleEmaClick={handleEmaGenerate}
-        hanldeMacdClick={handleMacdGenerate}
+        handleMacdClick={handleMacdGenerate}
+        handleRsiClick={handleRsiGenerate}
+        handleGenerateCandlesClick={handleCandlesGenerate}
         config={config}
         setConfig={setConfig}
         scenarioLabel={scenarioLabel}
         remainingToCreate={remainingToCreate}
-        canStart
+        canStart={canStart} // previously always true; now reflect actual state
+        rsiAvailable={candles.length >= 2}
       />
+      {canStart && macdData && macdData.signalLine && (
+        <MacdMetric
+          macdLine={macdData.macdLine}
+          signalLine={macdData.signalLine}
+          candleSlotWidth={candleSlotWidth}
+          height={macdHeight}
+          bottomOffset={rsi14 && rsi14.length ? rsiHeight : 0}
+          onResizeStart={(e: React.MouseEvent) => {
+            e.preventDefault();
+            setResizingPanel("macd");
+            setResizeStartY(e.clientY);
+            setResizeStartHeight(macdHeight);
+          }}
+        />
+      )}
+
+      {canStart && rsi14 && (
+        <RsiMetric
+          width={slotsWidth}
+          values={rsi14}
+          candleSlotWidth={candleSlotWidth}
+          height={rsiHeight}
+          onResizeStart={(e: React.MouseEvent) => {
+            e.preventDefault();
+            setResizingPanel("rsi");
+            setResizeStartY(e.clientY);
+            setResizeStartHeight(rsiHeight);
+          }}
+        />
+      )}
+
+      {/* global mouse handlers for resizing */}
+      {resizingPanel && (
+        <ResizeWatcher
+          onMove={(clientY: number) => {
+            const delta = resizeStartY - clientY; // dragging up increases height
+            if (resizingPanel === "macd") {
+              const next = Math.min(
+                Math.max(resizeStartHeight + delta, MACD_MIN),
+                MACD_MAX,
+              );
+              setMacdHeight(next);
+            } else {
+              const next = Math.min(
+                Math.max(resizeStartHeight + delta, RSI_MIN),
+                RSI_MAX,
+              );
+              setRsiHeight(next);
+            }
+          }}
+          onEnd={() => setResizingPanel(null)}
+        />
+      )}
 
       <Box
         sx={{
@@ -331,7 +495,13 @@ const RedactorPage = () => {
           overflow: "hidden",
           display: "flex",
           justifyContent: "center",
+          cursor: isDragging ? "grabbing" : "grab",
         }}
+        onMouseDown={handleChartMouseDown}
+        onMouseMove={handleChartMouseMove}
+        onMouseUp={handleChartMouseUp}
+        onMouseLeave={handleChartMouseUp}
+        onWheel={handleChartWheel}
       >
         <Box
           sx={{
@@ -351,25 +521,19 @@ const RedactorPage = () => {
           <Box
             sx={{
               position: "relative",
-              width: slotsWidth,
+               minHeight: "100vh",
+              width: slotsWidth + 200,
               margin: "0 auto",
               height: "100%",
+              transform: `translate(${panOffset}px, ${panOffsetY}px) scale(${scale})`,
+              transformOrigin: "center center",
+              transition: isDragging ? "none" : "transform 0.1s ease-out",
             }}
           >
             {canStart && ema20 && (
               <EmaMetric
                 width={slotsWidth}
                 values={ema20}
-                viewport={viewport}
-                candleSlotWidth={candleSlotWidth}
-              />
-            )}
-
-            {canStart && macdData && macdData.signalLine && (
-              <MacdMetric
-                width={slotsWidth}
-                macdLine={macdData.macdLine}
-                signalLine={macdData.signalLine}
                 viewport={viewport}
                 candleSlotWidth={candleSlotWidth}
               />
@@ -452,6 +616,7 @@ const RedactorPage = () => {
                             borderTop: "6px solid transparent",
                             borderBottom: "6px solid transparent",
                             borderLeft: "10px solid #e5e7eb",
+                            textWrap: "nowrap",
                           }}
                         />
                         <Typography variant="body1" color="#e5e7eb">
@@ -473,31 +638,6 @@ const RedactorPage = () => {
 };
 
 export default RedactorPage;
-
-const CandleSlot = ({
-  width,
-  children,
-  handleClick,
-  isSpawning = false,
-}: {
-  width: number;
-  children: React.ReactNode | null;
-  handleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
-  isSpawning?: boolean;
-}) => (
-  <div
-    className="candleSlot"
-    onClick={handleClick}
-    style={{
-      minWidth: width,
-      height: "100%",
-      position: "relative",
-      backgroundColor: isSpawning ? "rgba(169, 169, 169, 0.18)" : "inherit",
-    }}
-  >
-    {children}
-  </div>
-);
 
 /* шо осталось зробить? 
 в целом сам редактор і його система позиционирование працює добре, тепер треба сделать валотильность, тобто у кожного слота має бути паралельно 

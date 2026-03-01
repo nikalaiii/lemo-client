@@ -1,5 +1,5 @@
 import { Candle } from "@/components/redactor/candle";
-import { calculateEMA } from "./useEMA";
+import { calculateEMA } from "./calculateEMA";
 
 interface MACDArgs {
   candles: Candle[];
